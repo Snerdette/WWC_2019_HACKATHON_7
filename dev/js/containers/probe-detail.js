@@ -11,14 +11,14 @@ class ProbeDetail extends Component {
             <div>
                 <h2>ID: {this.props.probe.id}</h2>
                 <h3>Location: {this.props.probe.location}</h3>
-                <h3>Status: {this.probs.probe.status}</h3>
+                <h3>Status: {this.probe.probe.status}</h3>
                 <h3>Install Date: {this.props.probe.installDate}</h3>
             </div>
         );
     }
 }
 
-// "state.activeProbe" is set in reducers/index.js
+// "state.activeProbe" is set in reducers/index.html
 function mapStateToProps(state) {
     return {
         probe: state.activeProbe

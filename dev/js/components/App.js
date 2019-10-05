@@ -1,4 +1,8 @@
 import React from 'react';
+import ProbeList from '../containers/probe-list';
+import ProbeDetails from '../containers/probe-detail';
+
+require('../../scss/style.scss');
 
 
 const App = () => (
@@ -7,7 +11,7 @@ const App = () => (
         <ProbeList />
         <hr />
         <h2>Probe Details</h2>
-        <ProbeDetais />
+        <ProbeDetails />
     </div>
 );
 
