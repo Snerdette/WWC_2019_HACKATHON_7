@@ -1,5 +1,8 @@
 var path = require('path');
 var webpack = require('webpack');
+const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const MinifyPlugin = require("babel-minify-webpack-plugin");
+const glob = require("glob");
 
 module.exports = {
     devServer: {
@@ -8,11 +11,17 @@ module.exports = {
         port: 3000
     },
     devtool: 'cheap-module-eval-source-map',
-    entry: './dev/js/index.js',
     mode: 'development',
+    entry: {
+        entry: './dev/js/index.js'
+    },
     output: {
-        path: '/src/js/bundle.min.js',
-        filename: 'bundle.js'
+        path: __dirname + '/src/js',
+        publicPath: '/',
+        filename: 'bundle.min.js'
+    },
+    optimization: {
+        minimizer: [new UglifyJsPlugin()],
     },
     resolve: {
         extensions:
@@ -24,13 +33,14 @@ module.exports = {
             ]
     },
     plugins: [
+        //new MinifyPlugin(minifyOpts, pluginOpts),
         new webpack.optimize.OccurrenceOrderPlugin()
     ],
     module: {
         rules: [
             {
                 test: /\.m?js$/,
-                exclude: /(node_modules|bower_components)/,
+                exclude: /(node_modules)/,
                 use: {
                     loader: 'babel-loader',
                     options: {
