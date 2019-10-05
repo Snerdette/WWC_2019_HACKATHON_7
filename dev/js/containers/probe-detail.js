@@ -3,6 +3,17 @@ import {connect} from 'react-redux';
 
 
 class ProbeDetail extends Component {
+
+    renderDetails() {
+        return this.state.probe.map((probe) => {
+            return (
+                <li key={probe.id} onClick={() => this.props.selectProbe(probe)}>
+                    {probe.id} : {probe.location}
+                </li>
+            );
+        });
+    }
+
     render() {
         if (!this.props.probe) {
             return (<div>Select a Probe</div>);
