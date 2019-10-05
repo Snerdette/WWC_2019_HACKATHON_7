@@ -11,7 +11,7 @@ class ProbeDetail extends Component {
             <div>
                 <h2>ID: {this.props.probe.id}</h2>
                 <h3>Location: {this.props.probe.location}</h3>
-                <h3>Status: {this.probe.probe.status}</h3>
+                <h3>Status: {this.props.probe.status}</h3>
                 <h3>Install Date: {this.props.probe.installDate}</h3>
             </div>
         );

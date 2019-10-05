@@ -7,10 +7,7 @@ class ProbeList extends Component {
     renderList() {
         return this.props.probes.map((probe) => {
             return (
-                <li
-                    key={probe.id}
-                    onClick={() => this.props.selectProbe(probe)}
-                >
+                <li key={probe.id} onClick={() => this.props.selectProbe(probe)}>
                     {probe.id} : {probe.location}
                 </li>
             );
