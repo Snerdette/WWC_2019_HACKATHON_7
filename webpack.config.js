@@ -11,7 +11,6 @@ module.exports = {
     entry: './dev/js/index.js',
     mode: 'development',
     output: {
-        path: '/src/js/bundle.min.js',
         filename: 'bundle.js'
     },
     resolve: {
