@@ -4,12 +4,16 @@ import {connect} from 'react-redux';
 import {selectProbe} from "../actions/index";
 
 class ProbeList extends Component {
+
     renderList() {
         return this.props.probes.map((probe) => {
             return (
-                <ul key={probe.id} onClick={() => this.props.selectProbe(probe)}>
-                    {probe.id} : {probe.location}
-                </ul>
+                <tr>
+                    <ul style = {alignMiddleStyle} key={probe.id} onClick={() => this.props.selectProbe(probe)}>
+                        {probe.id} : {probe.location}
+                    </ul>
+                </tr>
+
             );
         });
     }
@@ -38,3 +42,7 @@ function matchDispatchToProps(dispatch){
 // We don't want to return the plain UserList (component) anymore, we want to return the smart Container
 //      > UserList is now aware of state and actions
 export default connect(mapStateToProps, matchDispatchToProps)(ProbeList);
+
+let alignMiddleStyle = {
+    verticalAlign: 'middle'
+};
