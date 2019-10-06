@@ -25,6 +25,7 @@ This infrastructure stack is set up to demonstrate the detection of and response
 ## Things we think are important to know
 
 - We are using a 2-way communication channel over UART to read and repsond to explicit instructions across the Arduino and Azure sphere devices dynamically
+- Captive Portal is used for accessing ESP8266 locally and serves interface automatically upon connect by a local device
 - The Azure tool chain is fully configured to the point where we can dynamically pull data from the device in the field locally for review and other data driven tasks
 - Dynamic web-app that can respond to and display data from the AzSphere IoT
 - Half of our team left by mid-day on Saturday
