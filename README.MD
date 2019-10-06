@@ -10,11 +10,11 @@ Dynamically respond to atmospheric gas composition changes by issuing "Open" and
 
 ## Team Members
 
-Amelia Wietting (Aask)
-Kate LaFrance
-Xuehong Liu
-Allison Walker
-Claire Cassidy
+- Amelia Wietting (Aask)
+- Kate LaFrance
+- Xuehong Liu
+- Allison Walker
+- Claire Cassidy
 
 ## Summary
 
