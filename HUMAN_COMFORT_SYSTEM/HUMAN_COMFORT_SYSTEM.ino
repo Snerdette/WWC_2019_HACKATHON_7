@@ -16,7 +16,9 @@ bool quality_check_switch = 0;
 bool quality_alert = 0;
 int incomingByte = 0; // for incoming serial data
 
-int servoPin = 2;
+#define LED_BUILTIN 2
+
+int servoPin = 14;
 
 bool move_servo_from_azure = 0;
 
@@ -166,40 +168,46 @@ void loop() {
     int reading = analogRead(A0);
 
     if(quality_alert == 1){
-      if(reading <= 75){
+      if(reading <= 300){
         quality_alert = 0;
-        Serial.print("ALERT_CLEARED");
+        Serial.print("ALERT_CLEARED ");
         digitalWrite(LED_BUILTIN, HIGH);
-        Serial.print(reading);
+        Serial.print("\n");
         servo.write(0);
         servoAngle = 0;
       }
     }else{
-      Serial.print("NOMINAL");
+      Serial.print("NOMINAL\n");
       digitalWrite(LED_BUILTIN, HIGH);
     }
     
-    if(reading > 75){
+    if(reading > 300){
       if(quality_alert == 0){
-        Serial.print("INHABITABLE");
-        //digitalWrite(LED_BUILTIN, LOW);
+        Serial.print("INHABITABLE\n");
+        digitalWrite(LED_BUILTIN, LOW);
         servo.write(90);
         servoAngle = 90;
         quality_alert = 1;
       }
     }
     //Print out our reading every time
-    Serial.print("DATA:");
-    Serial.print(reading);
+    
   }
+
+  if(loop_count % (blink_wait * 4) == 0){
+    int reading = analogRead(A0);
+    Serial.printf("DATA:%d\n",reading);
+  }
+
 
   if (Serial.available() > 0) {
     // read the incoming byte:
     incomingByte = Serial.read();
 
     // say what you got:
-    Serial.print("Azure Command Received: ");
-    Serial.print(incomingByte, DEC);
+    //Serial.print("Azure Command Received: ");
+    //Serial.print(incomingByte, DEC);
+    //Serial.print("\n");
     if(move_servo_from_azure == 1){
       servo.write(0);
       move_servo_from_azure = 0;

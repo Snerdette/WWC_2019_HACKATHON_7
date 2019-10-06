@@ -4,9 +4,10 @@
   "ComponentId" : "4f2d9823-dbbd-4740-a7dd-198c32ba34fe",
   "EntryPoint": "/bin/app",
   "CmdArgs": [],
-  "Capabilities": {
-    "Gpio": [ "$SAMPLE_BUTTON_1" ],
-    "Uart": [ "$SAMPLE_UART" ]
-  },
+    "Capabilities": {
+        "AllowedConnections": [ "global.azure-devices-provisioning.net", "Dalek.azure-devices.net" ],
+        "Gpio": [ "$SAMPLE_BUTTON_1" ],
+        "Uart": [ "$SAMPLE_UART" ]
+    },
   "ApplicationType": "Default"
 }

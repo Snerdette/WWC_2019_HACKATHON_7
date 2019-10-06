@@ -1,1 +1,1 @@
-{"SchemaVersion":1,"Name":"UART_HighLevelApp","ComponentId":"4f2d9823-dbbd-4740-a7dd-198c32ba34fe","EntryPoint":"/bin/app","CmdArgs":[],"Capabilities":{"Gpio":[12],"Uart":["ISU0"]},"ApplicationType":"Default","TargetApplicationRuntimeVersion":2}
+{"SchemaVersion":1,"Name":"UART_HighLevelApp","ComponentId":"4f2d9823-dbbd-4740-a7dd-198c32ba34fe","EntryPoint":"/bin/app","CmdArgs":[],"Capabilities":{"AllowedConnections":["global.azure-devices-provisioning.net","Dalek.azure-devices.net"],"Gpio":[12],"Uart":["ISU0"]},"ApplicationType":"Default","TargetApplicationRuntimeVersion":2}

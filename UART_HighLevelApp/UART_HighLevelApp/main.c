@@ -29,6 +29,7 @@
 #include <applibs/uart.h>
 #include <applibs/gpio.h>
 #include <applibs/log.h>
+#include <applibs/networking.h>
 
 // Azure IoT SDK
 #include <iothub_client_core_common.h>
@@ -60,7 +61,7 @@ static GPIO_Value_Type buttonState = GPIO_Value_High;
 static volatile sig_atomic_t terminationRequired = false;
 
 // Define custom functions without using a header file
-static void DoSomething(int action);
+static void DoSomething(int action, char* data);
 int action = 0;
 
 // Define stuff for connecting to web
@@ -71,8 +72,17 @@ static IOTHUB_DEVICE_CLIENT_LL_HANDLE iothubClientHandle = NULL;
 static const int AzureIoTDefaultPollPeriodSeconds = 5;
 
 static void SetupAzureClient(void);
+
 static void TwinCallback(DEVICE_TWIN_UPDATE_STATE updateState, const unsigned char* payload, size_t payloadSize, void* userContextCallback);
 static void HubConnectionStatusCallback(IOTHUB_CLIENT_CONNECTION_STATUS result, IOTHUB_CLIENT_CONNECTION_STATUS_REASON reason, void* userContextCallback);
+static void AzureTimerEventHandler(EventData* eventData);
+static void TwinReportState(const char* propertyName, char* propertyValue);
+
+static void SendMessageCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void* context);
+
+static EventData azureEventData = { .eventHandler = &AzureTimerEventHandler };
+
+static void SendTelemetry(const unsigned char* key, const unsigned char* value);
 
 // const char connectionString = "";
 
@@ -146,15 +156,17 @@ static void ButtonTimerEventHandler(EventData *eventData)
 /// <summary>
 ///     Handle UART event: if there is incoming data, print it.
 /// </summary>
+char SerialBuffer[256];
+int SerialPos = 0;
 static void UartEventHandler(EventData *eventData)
 {
-    const size_t receiveBufferSize = 256;
-    uint8_t receiveBuffer[receiveBufferSize + 1]; // allow extra byte for string termination
+    //const size_t receiveBufferSize = 256;
+    //uint8_t receiveBuffer[receiveBufferSize + 1]; // allow extra byte for string termination
     ssize_t bytesRead;
 
     // Read incoming UART data. It is expected behavior that messages may be received in multiple
     // partial chunks.
-    bytesRead = read(uartFd, receiveBuffer, receiveBufferSize);
+    bytesRead = read(uartFd, &SerialBuffer[SerialPos], sizeof(SerialBuffer) - SerialPos);
     if (bytesRead < 0) {
         Log_Debug("ERROR: Could not read UART: %s (%d).\n", strerror(errno), errno);
         terminationRequired = true;
@@ -162,26 +174,52 @@ static void UartEventHandler(EventData *eventData)
     }
 
     if (bytesRead > 0) {
-        // Null terminate the buffer to make it a valid string, and print it
-        receiveBuffer[bytesRead] = 0;
-		char * data_recieved = (char *)receiveBuffer;
-        Log_Debug("UART received %d bytes: '%s'", bytesRead, data_recieved);
+        //got data, find a new line, if any then print it and shift the buffer over
+		SerialPos += bytesRead;
 
-		DoSomething(action);
+		bytesRead = 0;
+		while (bytesRead < SerialPos)
+		{
+			if (SerialBuffer[bytesRead] == '\n')
+			{
+				SerialBuffer[bytesRead] = 0;
+				Log_Debug("UART received %d bytes: '%s'\n", bytesRead, SerialBuffer);
+				if (strncmp(SerialBuffer, "DATA",4) == 0) {
+					DoSomething(1,SerialBuffer); //send data
 
-		Log_Debug("\n");
+				}
+
+				//shuffle the buffer
+				bytesRead++;	//skip newline/null byte
+				memmove(&SerialBuffer[0], &SerialBuffer[bytesRead], SerialPos - bytesRead);
+				SerialPos -= bytesRead;
+				bytesRead = 0;
+			}
+			else
+				bytesRead++;
+		}
     }
 }
 
-static void DoSomething(int action) {
+static void DoSomething(int action, char* data) {
+	
+
 	Log_Debug("Beginning Action...");
 	switch (action) {
 		case 1 :
-			Log_Debug("Received command to perform action 1 (ONE)!!!");
+			Log_Debug("Received command to perform action 1 (ONE), SendTelemetry...\n");
+			if (iothubConnected) {
+				TwinReportState("GasSensor", &data[5]);
+				Log_Debug("Sent telemetry to IoT hub ^_^\n");
+			} else {
+				Log_Debug("No connection to IoT hub to send data!!!");
+			}
+			break;
 		case 2 :
 			Log_Debug("Received command to perform action 2 (TWO)!!!");
-	default:
-		Log_Debug("\nNo action received!!!");
+			break;
+		default:
+			Log_Debug("\nNo action received!!!");
 	}
 }
 
@@ -232,9 +270,15 @@ static int InitPeripheralsAndHandlers(void)
     if (gpioButtonTimerFd < 0) {
         return -1;
     }
-	
+
 	// Set up connection to Azure Sphere IoT hub
-	SetupAzureClient();
+	azureIoTPollPeriodSeconds = AzureIoTDefaultPollPeriodSeconds;
+	struct timespec azureTelemetryPeriod = { azureIoTPollPeriodSeconds, 0 };
+	azureTimerFd =
+		CreateTimerFdAndAddToEpoll(epollFd, &azureTelemetryPeriod, &azureEventData, EPOLLIN);
+	if (azureTimerFd < 0) {
+		return -1;
+	}
 
     return 0;
 }
@@ -293,12 +337,12 @@ static void SetupAzureClient(void)
 		Log_Debug("ERROR: failure to set option \"TrustedCerts\"\n");
 		return;
 	}
-
+	
 	// Successfully connected, so make sure the polling frequency is back to the default
 	azureIoTPollPeriodSeconds = AzureIoTDefaultPollPeriodSeconds;
 	struct timespec azureTelemetryPeriod = { azureIoTPollPeriodSeconds, 0 };
 	SetTimerFdToPeriod(azureTimerFd, &azureTelemetryPeriod);
-
+	
 	iothubConnected = true;
 
 	if (IoTHubDeviceClient_LL_SetOption(iothubClientHandle, OPTION_KEEP_ALIVE,
@@ -418,4 +462,91 @@ cleanup:
 	// Release the allocated memory.
 	json_value_free(rootProperties);
 	free(nullTerminatedJsonString);
+}
+
+static void AzureTimerEventHandler(EventData* eventData)
+{
+	if (ConsumeTimerFdEvent(azureTimerFd) != 0) {
+		terminationRequired = true;
+		return;
+	}
+
+	bool isNetworkReady = false;
+	if (Networking_IsNetworkingReady(&isNetworkReady) != -1) {
+		if (isNetworkReady && !iothubConnected) {
+			SetupAzureClient();
+		}
+	}
+	else {
+		Log_Debug("Failed to get Network state\n");
+	}
+
+	if (iothubConnected) {
+		//SendSimulatedTemperature();
+		IoTHubDeviceClient_LL_DoWork(iothubClientHandle);
+	}
+}
+
+static void SendTelemetry(const unsigned char* key, const unsigned char* value)
+{
+	static char eventBuffer[100] = { 0 };
+	static const char* EventMsgTemplate = "{ \"%s\": \"%s\" }";
+	int len = snprintf(eventBuffer, sizeof(eventBuffer), EventMsgTemplate, key, value);
+	if (len < 0)
+		return;
+
+	Log_Debug("Sending IoT Hub Message: %s\n", eventBuffer);
+
+	IOTHUB_MESSAGE_HANDLE messageHandle = IoTHubMessage_CreateFromString(eventBuffer);
+
+	if (messageHandle == 0) {
+		Log_Debug("WARNING: unable to create a new IoTHubMessage\n");
+		return;
+	}
+
+	if (IoTHubDeviceClient_LL_SendEventAsync(iothubClientHandle, messageHandle, SendMessageCallback,
+		/*&callback_param*/ 0) != IOTHUB_CLIENT_OK) {
+		Log_Debug("WARNING: failed to hand over the message to IoTHubClient\n");
+	}
+	else {
+		Log_Debug("INFO: IoTHubClient accepted the message for delivery\n");
+	}
+
+	IoTHubMessage_Destroy(messageHandle);
+}
+
+static void SendMessageCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void* context)
+{
+	Log_Debug("INFO - SendMessageCallback: Message received by IoT Hub. Result is: %d\n", result);
+}
+
+/// <summary>
+///     Callback invoked when the Device Twin reported properties are accepted by IoT Hub.
+/// </summary>sendt
+static void ReportStatusCallback(int result, void* context)
+{
+	Log_Debug("INFO - ReportStatusCallback: Device Twin reported properties update result: HTTP status code %d\n", result);
+}
+
+static void TwinReportState(const char* propertyName, char* propertyValue)
+{
+	if (iothubClientHandle == NULL) {
+		Log_Debug("ERROR: client not initialized\n");
+	}
+	else {
+		static char reportedPropertiesString[30] = { 0 };
+		int len = snprintf(reportedPropertiesString, 30, "{\"%s\":\"%s\"}", propertyName, propertyValue);
+		if (len < 0)
+			return;
+
+		if (IoTHubDeviceClient_LL_SendReportedState(
+			iothubClientHandle, (unsigned char*)reportedPropertiesString,
+			strlen(reportedPropertiesString), ReportStatusCallback, 0) != IOTHUB_CLIENT_OK) {
+			Log_Debug("ERROR - IoTHubDeviceClient_LL_SendReportedState: failed to set reported state for '%s'.\n", propertyName);
+		}
+		else {
+			Log_Debug("INFO - IoTHubDeviceClient_LL_SendReportedState: Reported state for '%s' to value '%s'.\n", propertyName,
+			propertyValue);
+		}
+	}
 }

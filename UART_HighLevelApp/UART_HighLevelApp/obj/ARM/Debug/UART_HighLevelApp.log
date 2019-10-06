@@ -1,7 +1,18 @@
-﻿  Azure Sphere Utility version 19.5.4.53731
+﻿  main.c: In function 'UartEventHandler':
+main.c(169,77): warning :  conversion to 'unsigned int' from 'int' may change the sign of the result [-Wsign-conversion]
+main.c(169,77): warning :      bytesRead = read(uartFd, &SerialBuffer[SerialPos], sizeof(SerialBuffer) - SerialPos);
+main.c(169,77): warning :                                                                              ^
+main.c(194,67): warning :  conversion to 'size_t' {aka 'unsigned int'} from 'ssize_t' {aka 'int'} may change the sign of the result [-Wsign-conversion]
+main.c(194,67): warning :      memmove(&SerialBuffer[0], &SerialBuffer[bytesRead], SerialPos - bytesRead);
+main.c(194,67): warning :                                                          ~~~~~~~~~~^~~~~~~~~~~
+main.c(194,67): warning : At top level:
+main.c(490,13): warning :  'SendTelemetry' defined but not used [-Wunused-function]
+main.c(490,13): warning :  static void SendTelemetry(const unsigned char* key, const unsigned char* value)
+main.c(490,13): warning :              ^~~~~~~~~~~~~
+  Azure Sphere Utility version 19.5.4.53731
   Copyright (C) Microsoft Corporation. All rights reserved.
    
-  Start time (UTC): Sunday, 06 October 2019 03:38:15 
+  Start time (UTC): Sunday, 06 October 2019 19:35:15 
   verbose: Creating image package. 
   verbose: Azure Sphere application image package written. 
   verbose: Appending metadata. 
@@ -9,14 +20,14 @@
     Section: Identity
       Image Type:           Application
       Component ID:         4f2d9823-dbbd-4740-a7dd-198c32ba34fe
-      Image ID:             b14c7027-39f7-4836-8959-72fc2f8bb2c8
+      Image ID:             bd3c02ca-04f1-4b07-9a3a-4fa141847fc6
     Section: Signature
       Signing Type:         ECDsa256
       Cert:                 a8d5cc6958f48710140d7a26160fc1cfc31f5df0
     Section: Debug
       Image Name:           UART_HighLevelApp
-      Built On (UTC):       10/6/2019 3:38:16 AM
-      Built On (Local):     10/5/2019 10:38:16 PM
+      Built On (UTC):       10/6/2019 7:35:16 PM
+      Built On (Local):     10/6/2019 12:35:16 PM
     Section: Temporary Image
       Remove image at boot: False
       Under development:    True
@@ -25,4 +36,4 @@
    
   verbose: Packaging completed successfully. 
   verbose: Output file is at: C:\temp\github\UART_HighLevelApp\UART_HighLevelApp\bin\ARM\Debug\UART_HighLevelApp.imagepackage 
-  Command completed successfully in 00:00:00.4378525. 
+  Command completed successfully in 00:00:00.4269383. 
