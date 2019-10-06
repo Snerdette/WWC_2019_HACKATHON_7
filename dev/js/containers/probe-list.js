@@ -8,11 +8,28 @@ class ProbeList extends Component {
     renderList() {
         return this.props.probes.map((probe) => {
             return (
-                <tr>
-                    <ul style = {alignMiddleStyle} key={probe.id} onClick={() => this.props.selectProbe(probe)}>
-                        {probe.id} : {probe.location}
-                    </ul>
-                </tr>
+                <div>
+                    <table cellSpacing="10">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Current Methane Level</th>
+                            <th>Install Date</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td onClick={() => this.props.selectProbe(probe)}>{probe.id}</td>
+                            <td onClick={() => this.props.selectProbe(probe)}>{probe.location}</td>
+                            <td onClick={() => this.props.selectProbe(probe)}>{probe.status}</td>
+                            <td onClick={() => this.props.selectProbe(probe)}>{probe.methaneLevel}</td>
+                            <td onClick={() => this.props.selectProbe(probe)}>{probe.installDate}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
             );
         });
